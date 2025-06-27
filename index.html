@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-Means Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .control-group input {
+            padding: 8px 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+            width: 80px;
+        }
+
+        .control-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .result-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        .result-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid #e1e1e1;
+            font-size: 0.85rem;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9ff;
+        }
+
+        .data-table tr:hover {
+            background-color: #e8ecff;
+            transition: background-color 0.3s;
+        }
+
+        .cluster-0 { background-color: #ffeb3b !important; }
+        .cluster-1 { background-color: #4caf50 !important; }
+        .cluster-2 { background-color: #2196f3 !important; }
+
+        .centroid-table {
+            margin-top: 15px;
+        }
+
+        .centroid-table th,
+        .centroid-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .centroid-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .iterations {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .iteration {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .iteration h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .status.converged {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .status.not-converged {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .match-status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        .match-status.match {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #b6dfeb;
+        }
+
+        .match-status.no-match {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+
+        .editable-input {
+            width: 60px;
+            padding: 4px 6px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .results {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group input {
+                width: 100%;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 K-Means Calculator</h1>
+            <p>Dataset Analysis dengan Initial Centroids yang Tepat</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>K (Clusters)</label>
+                <input type="number" id="k" value="3" min="2" max="5">
+            </div>
+            <div class="control-group">
+                <label>Max Iterations</label>
+                <input type="number" id="maxIter" value="100" min="1" max="1000">
+            </div>
+            <div class="control-group">
+                <label>Tolerance</label>
+                <input type="number" id="tolerance" value="0.001" step="0.001" min="0.001">
+            </div>
+            <button class="btn" onclick="runKMeans()">🚀 Run K-Means</button>
+            <button class="btn" onclick="resetCentroids()">🔄 Reset Centroids</button>
+        </div>
+
+        <form id="addDataForm" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+            <input type="number" id="inputX" step="0.0001" placeholder="X" required class="editable-input">
+            <input type="number" id="inputY" step="0.0001" placeholder="Y" required class="editable-input">
+            <input type="number" id="inputZ" step="0.0001" placeholder="Z" required class="editable-input">
+            <button type="submit" class="btn" style="padding: 8px 18px;">Tambah Data</button>
+            <button type="button" class="btn" id="clearDatasetBtn" style="padding: 8px 18px; background: #f44336; margin-left: 10px;">Hapus Semua Data</button>
+        </form>
+
+        <div class="results">
+            <div class="result-section">
+                <h3>📊 Dataset</h3>
+                <table class="data-table" id="datasetTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>X</th>
+                            <th>Y</th>
+                            <th>Z</th>
+                            <th>Cluster</th>
+                        </tr>
+                    </thead>
+                    <tbody id="datasetBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="result-section">
+                <h3>🎯 Centroids</h3>
+                <div>
+                    <h4>Final Centroids:</h4>
+                    <table class="centroid-table" id="finalCentroidsTable">
+                        <thead>
+                            <tr>
+                                <th>Cluster</th>
+                                <th>X</th>
+                                <th>Y</th>
+                                <th>Z</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finalCentroidsBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h4>🎯 RapidMiner Target:</h4>
+                    <table class="centroid-table">
+                        <thead>
+                            <tr>
+                                <th>Cluster</th>
+                                <th>X</th>
+                                <th>Y</th>
+                                <th>Z</th>
+                            </tr>
+                        </thead>
+                        <tbody id="targetCentroidsBody">
+                            <!-- Akan diisi oleh JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="iterations" id="iterationsContainer" style="display: none;">
+            <h3>🔄 Iteration History</h3>
+            <div id="iterationsList"></div>
+        </div>
+
+        <div id="statusContainer"></div>
+    </div>
+
+    <script>
+        // Dataset sesuai dengan data yang diberikan
+        const dataset = [
+            {id: 1, x: 4.4170, y: 0.6902, z: 1.5183},
+            {id: 2, x: 3.8648, y: 0.5521, z: 1.2423},
+            {id: 3, x: 10.3523, y: 2.4845, z: 3.5888},
+            {id: 4, x: 9.5241, y: 2.2085, z: 3.3127},
+            {id: 5, x: 10.7663, y: 2.7606, z: 3.7268},
+            {id: 6, x: 4.1409, y: 0.8282, z: 1.3808},
+            {id: 7, x: 3.4508, y: 0.4141, z: 1.1042},
+            {id: 8, x: 11.1804, y: 2.8986, z: 4.0029},
+            {id: 9, x: 8.9720, y: 1.9324, z: 3.1747},
+            {id: 10, x: 4.6930, y: 0.9662, z: 1.6564},
+            {id: 11, x: 9.9382, y: 2.6226, z: 3.4508},
+            {id: 12, x: 4.0029, y: 0.6902, z: 1.3803},
+            {id: 13, x: 9.3860, y: 2.0705, z: 3.0367},
+            {id: 14, x: 4.2789, y: 0.8282, z: 1.5183},
+            {id: 15, x: 10.9044, y: 2.7606, z: 3.8648}
+        ];
+
+        // Initial centroids berdasarkan highlighting di tabel (point 1, 3, 8)
+        let initialCentroids = [
+            {x: 4.4170, y: 0.6902, z: 1.5183}, // Point 1 (Cluster 0)
+            {x: 10.3523, y: 2.4845, z: 3.5888}, // Point 3 (Cluster 1)
+            {x: 11.1804, y: 2.8986, z: 4.0029}  // Point 8 (Cluster 2)
+        ];
+
+        // Target centroids dari RapidMiner
+        const targetCentroids = [
+            {x: 4.121, y: 0.710, z: 1.400},
+            {x: 10.801, y: 2.726, z: 3.796},
+            {x: 9.455, y: 2.208, z: 3.244}
+        ];
+
+        let currentCentroids = [];
+        let clusters = [];
+        let iterations = [];
+
+        function displayDataset() {
+            const tbody = document.getElementById('datasetBody');
+            tbody.innerHTML = '';
+            
+            dataset.forEach((point, index) => {
+                const row = tbody.insertRow();
+                const clusterClass = clusters[index] !== undefined ? `cluster-${clusters[index]}` : '';
+                row.className = clusterClass;
+                
+                row.insertCell(0).textContent = point.id;
+                row.insertCell(1).textContent = point.x.toFixed(4);
+                row.insertCell(2).textContent = point.y.toFixed(4);
+                row.insertCell(3).textContent = point.z.toFixed(4);
+                row.insertCell(4).textContent = clusters[index] !== undefined ? clusters[index] : '-';
+            });
+        }
+
+        function displayFinalCentroids() {
+            const tbody = document.getElementById('finalCentroidsBody');
+            tbody.innerHTML = '';
+            
+            currentCentroids.forEach((centroid, index) => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = index;
+                row.insertCell(1).textContent = centroid.x.toFixed(4);
+                row.insertCell(2).textContent = centroid.y.toFixed(4);
+                row.insertCell(3).textContent = centroid.z.toFixed(4);
+            });
+        }
+
+        function calculateDistance(point1, point2) {
+            const dx = point1.x - point2.x;
+            const dy = point1.y - point2.y;
+            const dz = point1.z - point2.z;
+            return Math.sqrt(dx*dx + dy*dy + dz*dz);
+        }
+
+        function assignClusters() {
+            clusters = [];
+            dataset.forEach(point => {
+                let minDistance = Infinity;
+                let assignedCluster = 0;
+                
+                currentCentroids.forEach((centroid, index) => {
+                    const distance = calculateDistance(point, centroid);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        assignedCluster = index;
+                    }
+                });
+                
+                clusters.push(assignedCluster);
+            });
+        }
+
+        function updateCentroids() {
+            const newCentroids = [];
+            const k = parseInt(document.getElementById('k').value);
+            
+            for (let i = 0; i < k; i++) {
+                const clusterPoints = dataset.filter((_, index) => clusters[index] === i);
+                
+                if (clusterPoints.length > 0) {
+                    const sumX = clusterPoints.reduce((sum, p) => sum + p.x, 0);
+                    const sumY = clusterPoints.reduce((sum, p) => sum + p.y, 0);
+                    const sumZ = clusterPoints.reduce((sum, p) => sum + p.z, 0);
+                    
+                    newCentroids.push({
+                        x: sumX / clusterPoints.length,
+                        y: sumY / clusterPoints.length,
+                        z: sumZ / clusterPoints.length
+                    });
+                } else {
+                    newCentroids.push(currentCentroids[i]);
+                }
+            }
+            
+            return newCentroids;
+        }
+
+        function checkConvergence(oldCentroids, newCentroids, tolerance) {
+            for (let i = 0; i < oldCentroids.length; i++) {
+                const distance = calculateDistance(oldCentroids[i], newCentroids[i]);
+                if (distance > tolerance) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function checkMatchWithTarget() {
+            const tolerance = 0.1; // Toleransi untuk matching
+            let matches = 0;
+            
+            // Try different permutations to find best match
+            const permutations = [
+                [0, 1, 2], [0, 2, 1], [1, 0, 2], 
+                [1, 2, 0], [2, 0, 1], [2, 1, 0]
+            ];
+            
+            let bestMatch = 0;
+            let bestPermutation = [0, 1, 2];
+            
+            permutations.forEach(perm => {
+                let tempMatches = 0;
+                perm.forEach((targetIdx, currentIdx) => {
+                    const dist = calculateDistance(currentCentroids[currentIdx], targetCentroids[targetIdx]);
+                    if (dist <= tolerance) tempMatches++;
+                });
+                
+                if (tempMatches > bestMatch) {
+                    bestMatch = tempMatches;
+                    bestPermutation = perm;
+                }
+            });
+            
+            return {
+                matches: bestMatch,
+                total: targetCentroids.length,
+                isMatch: bestMatch === targetCentroids.length,
+                permutation: bestPermutation
+            };
+        }
+
+        function displayStatus(converged, iterationCount, matchResult) {
+            const container = document.getElementById('statusContainer');
+            container.innerHTML = '';
+            
+            // Convergence status
+            const statusDiv = document.createElement('div');
+            statusDiv.className = converged ? 'status converged' : 'status not-converged';
+            statusDiv.innerHTML = converged 
+                ? `✅ Converged after ${iterationCount} iterations`
+                : `⚠️ Not converged after ${iterationCount} iterations`;
+            container.appendChild(statusDiv);
+            
+            // Match status
+            const matchDiv = document.createElement('div');
+            matchDiv.className = matchResult.isMatch ? 'match-status match' : 'match-status no-match';
+            matchDiv.innerHTML = matchResult.isMatch 
+                ? `🎯 MATCH! All centroids match RapidMiner target (${matchResult.matches}/${matchResult.total})`
+                : `📊 Partial match: ${matchResult.matches}/${matchResult.total} centroids match RapidMiner target`;
+            container.appendChild(matchDiv);
+        }
+
+        function displayIterations() {
+            const container = document.getElementById('iterationsContainer');
+            const list = document.getElementById('iterationsList');
+            
+            if (iterations.length > 0) {
+                container.style.display = 'block';
+                list.innerHTML = '';
+                
+                iterations.forEach((iter, index) => {
+                    const iterDiv = document.createElement('div');
+                    iterDiv.className = 'iteration';
+                    
+                    let html = `<h4>Iteration ${index + 1}</h4>`;
+                    html += '<table class="centroid-table"><thead><tr><th>Cluster</th><th>X</th><th>Y</th><th>Z</th></tr></thead><tbody>';
+                    
+                    iter.forEach((centroid, i) => {
+                        html += `<tr>
+                            <td>${i}</td>
+                            <td>${centroid.x.toFixed(4)}</td>
+                            <td>${centroid.y.toFixed(4)}</td>
+                            <td>${centroid.z.toFixed(4)}</td>
+                        </tr>`;
+                    });
+                    
+                    html += '</tbody></table>';
+                    iterDiv.innerHTML = html;
+                    list.appendChild(iterDiv);
+                });
+            }
+        }
+
+        function runKMeans() {
+            const k = parseInt(document.getElementById('k').value);
+            const maxIterations = parseInt(document.getElementById('maxIter').value);
+            const tolerance = parseFloat(document.getElementById('tolerance').value);
+            
+            // Initialize centroids
+            currentCentroids = initialCentroids.slice(0, k).map(c => ({...c}));
+            iterations = [];
+            
+            let iterationCount = 0;
+            let converged = false;
+            
+            while (iterationCount < maxIterations && !converged) {
+                iterations.push(currentCentroids.map(c => ({...c})));
+                
+                assignClusters();
+                const newCentroids = updateCentroids();
+                
+                converged = checkConvergence(currentCentroids, newCentroids, tolerance);
+                currentCentroids = newCentroids;
+                iterationCount++;
+            }
+            
+            // Final assignment
+            assignClusters();
+            
+            // Check match with target
+            const matchResult = checkMatchWithTarget();
+            
+            // Display results
+            displayDataset();
+            displayFinalCentroids();
+            displayIterations();
+            displayStatus(converged, iterationCount, matchResult);
+        }
+
+        function resetCentroids() {
+            // Reset ke initial centroids yang sudah ditentukan
+            initialCentroids = [
+                {x: 4.4170, y: 0.6902, z: 1.5183}, // Point 1
+                {x: 10.3523, y: 2.4845, z: 3.5888}, // Point 3
+                {x: 11.1804, y: 2.8986, z: 4.0029}  // Point 8
+            ];
+            
+            currentCentroids = [];
+            clusters = [];
+            iterations = [];
+            
+            displayDataset();
+            displayFinalCentroids();
+            
+            document.getElementById('iterationsContainer').style.display = 'none';
+            document.getElementById('statusContainer').innerHTML = '';
+        }
+
+        function displayTargetCentroids() {
+            const tbody = document.getElementById('targetCentroidsBody');
+            tbody.innerHTML = '';
+            targetCentroids.forEach((centroid, index) => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = index;
+                const xCell = row.insertCell(1);
+                const yCell = row.insertCell(2);
+                const zCell = row.insertCell(3);
+                xCell.innerHTML = `<input type="number" class="editable-input" value="${centroid.x}" step="0.001" onchange="updateTargetCentroid(${index}, 'x', this.value)">`;
+                yCell.innerHTML = `<input type="number" class="editable-input" value="${centroid.y}" step="0.001" onchange="updateTargetCentroid(${index}, 'y', this.value)">`;
+                zCell.innerHTML = `<input type="number" class="editable-input" value="${centroid.z}" step="0.001" onchange="updateTargetCentroid(${index}, 'z', this.value)">`;
+            });
+        }
+
+        // Initialize display
+        document.addEventListener('DOMContentLoaded', function() {
+            displayDataset();
+            displayFinalCentroids();
+            displayTargetCentroids();
+        });
+
+        function updateInitialCentroids() {
+            initialCentroids = [];
+            const k = targetCentroids.length;
+            for (let i = 0; i < k; i++) {
+                if (dataset[i]) {
+                    initialCentroids.push({
+                        x: dataset[i].x,
+                        y: dataset[i].y,
+                        z: dataset[i].z
+                    });
+                }
+            }
+        }
+
+        function updateTargetCentroid(index, key, value) {
+            targetCentroids[index][key] = parseFloat(value);
+        }
+
+        document.getElementById('addDataForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const x = parseFloat(document.getElementById('inputX').value);
+            const y = parseFloat(document.getElementById('inputY').value);
+            const z = parseFloat(document.getElementById('inputZ').value);
+
+            // Tambahkan ke dataset
+            dataset.push({
+                id: dataset.length + 1,
+                x, y, z
+            });
+
+            // Reset input
+            document.getElementById('inputX').value = '';
+            document.getElementById('inputY').value = '';
+            document.getElementById('inputZ').value = '';
+
+            // Refresh tampilan
+            displayDataset();
+            clusters = [];
+            currentCentroids = [];
+            iterations = [];
+            displayFinalCentroids();
+            document.getElementById('iterationsContainer').style.display = 'none';
+            document.getElementById('statusContainer').innerHTML = '';
+        });
+
+        document.getElementById('clearDatasetBtn').onclick = function() {
+            dataset.length = 0;
+            clusters = [];
+            currentCentroids = [];
+            iterations = [];
+            displayDataset();
+            displayFinalCentroids();
+            document.getElementById('iterationsContainer').style.display = 'none';
+            document.getElementById('statusContainer').innerHTML = '';
+        };
+    </script>
+</body>
+</html>
